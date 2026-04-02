@@ -1,0 +1,130 @@
+'use client'
+
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+
+export default function LoginPage() {
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+  const router = useRouter()
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError('')
+    setLoading(true)
+
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        setError(data.error || 'Giriş başarısız')
+        return
+      }
+
+      if (data.user.role === 'ADMIN') {
+        router.push('/admin')
+      } else {
+        router.push('/dashboard')
+      }
+    } catch {
+      setError('Bir hata oluştu. Lütfen tekrar deneyin.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="min-h-screen bg-surface-950 bg-hero-glow flex items-center justify-center px-4">
+      <div className="w-full max-w-md animate-fade-in">
+        {/* Logo */}
+        <div className="text-center mb-8">
+          <Link href="/" className="inline-flex items-center gap-2">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center">
+              <span className="text-white font-bold">G</span>
+            </div>
+            <span className="text-xl font-bold text-white">GPT Satış</span>
+          </Link>
+        </div>
+
+        {/* Card */}
+        <div className="glass rounded-3xl p-8 glow-sm">
+          <h1 className="text-2xl font-bold text-white mb-2">Hoş Geldiniz</h1>
+          <p className="text-surface-400 mb-8">Hesabınıza giriş yapın</p>
+
+          {error && (
+            <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm animate-slide-up">
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div>
+              <label className="block text-sm font-medium text-surface-300 mb-2">
+                Email
+              </label>
+              <input
+                id="login-email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl bg-surface-800/50 border border-surface-700 text-white placeholder-surface-500 focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500 transition-all"
+                placeholder="ornek@email.com"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-surface-300 mb-2">
+                Şifre
+              </label>
+              <input
+                id="login-password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl bg-surface-800/50 border border-surface-700 text-white placeholder-surface-500 focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500 transition-all"
+                placeholder="••••••••"
+                required
+              />
+            </div>
+
+            <button
+              id="login-submit"
+              type="submit"
+              disabled={loading}
+              className="w-full py-3.5 rounded-xl bg-gradient-to-r from-brand-500 to-brand-700 text-white font-semibold hover:from-brand-400 hover:to-brand-600 transition-all duration-300 shadow-lg shadow-brand-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? (
+                <span className="inline-flex items-center gap-2">
+                  <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                  Giriş yapılıyor...
+                </span>
+              ) : (
+                'Giriş Yap'
+              )}
+            </button>
+          </form>
+
+          <p className="mt-6 text-center text-sm text-surface-400">
+            Hesabınız yok mu?{' '}
+            <Link href="/register" className="text-brand-400 hover:text-brand-300 transition-colors font-medium">
+              Kayıt Ol
+            </Link>
+          </p>
+        </div>
+      </div>
+    </div>
+  )
+}

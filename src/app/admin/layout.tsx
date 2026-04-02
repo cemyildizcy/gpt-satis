@@ -1,0 +1,149 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+
+interface User {
+  id: string
+  email: string
+  name: string | null
+  role: string
+}
+
+export default function AdminLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  const [user, setUser] = useState<User | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const router = useRouter()
+  const pathname = usePathname()
+
+  useEffect(() => {
+    fetch('/api/auth/me')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.user && data.user.role === 'ADMIN') {
+          setUser(data.user)
+        } else {
+          router.push('/login')
+        }
+      })
+      .catch(() => router.push('/login'))
+      .finally(() => setLoading(false))
+  }, [router])
+
+  const handleLogout = async () => {
+    await fetch('/api/auth/logout', { method: 'POST' })
+    router.push('/login')
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-surface-950 flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    )
+  }
+
+  const navItems = [
+    { href: '/admin', label: 'Dashboard', icon: '📊' },
+    { href: '/admin/users', label: 'Kullanıcılar', icon: '👥' },
+    { href: '/admin/payments', label: 'Dekontlar', icon: '💳' },
+    { href: '/admin/logs', label: 'İşlem Logları', icon: '📋' },
+  ]
+
+  return (
+    <div className="min-h-screen bg-surface-950">
+      {/* Mobile sidebar toggle */}
+      <button
+        onClick={() => setSidebarOpen(!sidebarOpen)}
+        className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-xl glass"
+      >
+        <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
+
+      {/* Sidebar */}
+      <aside
+        className={`fixed inset-y-0 left-0 z-40 w-64 glass border-r border-white/5 transform transition-transform duration-300 lg:translate-x-0 ${
+          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
+      >
+        <div className="flex flex-col h-full">
+          {/* Logo */}
+          <div className="p-6 border-b border-white/5">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-red-500 to-red-700 flex items-center justify-center">
+                <span className="text-white font-bold text-sm">A</span>
+              </div>
+              <div>
+                <span className="text-lg font-bold text-white">Admin Panel</span>
+                <p className="text-xs text-surface-400">GPT Satış</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Nav */}
+          <nav className="flex-1 p-4 space-y-1">
+            {navItems.map((item) => {
+              const isActive = pathname === item.href
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setSidebarOpen(false)}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+                    isActive
+                      ? 'text-white bg-brand-500/10 border border-brand-500/20'
+                      : 'text-surface-400 hover:text-white hover:bg-surface-800'
+                  }`}
+                >
+                  <span className="text-lg">{item.icon}</span>
+                  {item.label}
+                </Link>
+              )
+            })}
+          </nav>
+
+          {/* User info */}
+          <div className="p-4 border-t border-white/5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-red-500 to-red-700 flex items-center justify-center">
+                <span className="text-white text-sm font-semibold">A</span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-white truncate">{user?.name || 'Admin'}</p>
+                <p className="text-xs text-surface-400 truncate">{user?.email}</p>
+              </div>
+            </div>
+            <button
+              onClick={handleLogout}
+              className="w-full px-4 py-2 rounded-xl text-sm text-surface-400 hover:text-white hover:bg-surface-800 transition-all"
+            >
+              Çıkış Yap
+            </button>
+          </div>
+        </div>
+      </aside>
+
+      {/* Overlay */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 z-30 bg-black/50 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* Main content */}
+      <main className="lg:ml-64 min-h-screen">
+        <div className="p-6 lg:p-8">{children}</div>
+      </main>
+    </div>
+  )
+}

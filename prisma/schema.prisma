@@ -1,0 +1,56 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id                String    @id @default(cuid())
+  email             String    @unique
+  passwordHash      String
+  name              String?
+  role              String    @default("USER") // USER | ADMIN
+  status            String    @default("PENDING") // ACTIVE | EXPIRED | PENDING
+  subscriptionStart DateTime?
+  subscriptionEnd   DateTime?
+  addedToWorkspace  Boolean   @default(false)
+  notes             String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  payments         Payment[]  @relation("UserPayments")
+  adminLogs        AdminLog[] @relation("AdminActions")
+  targetLogs       AdminLog[] @relation("TargetActions")
+  reviewedPayments Payment[]  @relation("ReviewedPayments")
+}
+
+model Payment {
+  id           String   @id @default(cuid())
+  userId       String
+  amount       Float    @default(250)
+  receiptUrl   String
+  status       String   @default("PENDING") // PENDING | APPROVED | REJECTED
+  adminNote    String?
+  reviewedById String?
+  reviewedAt   DateTime?
+  createdAt    DateTime @default(now())
+
+  user       User  @relation("UserPayments", fields: [userId], references: [id], onDelete: Cascade)
+  reviewedBy User? @relation("ReviewedPayments", fields: [reviewedById], references: [id])
+}
+
+model AdminLog {
+  id           String   @id @default(cuid())
+  adminId      String
+  action       String
+  targetUserId String?
+  details      String?
+  createdAt    DateTime @default(now())
+
+  admin  User  @relation("AdminActions", fields: [adminId], references: [id])
+  target User? @relation("TargetActions", fields: [targetUserId], references: [id])
+}
