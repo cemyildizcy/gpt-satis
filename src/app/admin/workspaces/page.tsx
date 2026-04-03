@@ -27,6 +27,12 @@ export default function AdminWorkspacesPage() {
   const [newName, setNewName] = useState('')
   const [showPasswords, setShowPasswords] = useState<Record<string, boolean>>({})
 
+  // Assignment states
+  const [assigningTo, setAssigningTo] = useState<string | null>(null)
+  const [unassignedUsers, setUnassignedUsers] = useState<UserBasic[]>([])
+  const [isUsersLoading, setIsUsersLoading] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+
   const fetchWorkspaces = useCallback(async () => {
     try {
       const res = await fetch('/api/admin/workspaces')
@@ -64,6 +70,41 @@ export default function AdminWorkspacesPage() {
       console.error(err)
     }
   }
+
+  const fetchUnassignedUsers = async () => {
+    setIsUsersLoading(true)
+    try {
+      const res = await fetch('/api/admin/users?unassigned=true')
+      const data = await res.json()
+      if (Array.isArray(data.users)) setUnassignedUsers(data.users)
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setIsUsersLoading(false)
+    }
+  }
+
+  const handleAssignUser = async (userId: string) => {
+    if (!assigningTo) return
+    try {
+      const res = await fetch(`/api/admin/users/${userId}/workspace`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ workspaceId: assigningTo })
+      })
+      if (res.ok) {
+        setAssigningTo(null)
+        fetchWorkspaces()
+      }
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  const filteredUsers = unassignedUsers.filter(u => 
+    u.email.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    (u.name && u.name.toLowerCase().includes(searchQuery.toLowerCase()))
+  )
 
   const handleDelete = async (id: string, email: string) => {
     if (!confirm(`${email} hesabını silmek istediğinize emin misiniz? İçindeki kullanıcıların ataması kaldırılacaktır.`)) return
@@ -171,9 +212,16 @@ export default function AdminWorkspacesPage() {
                       ))
                     )}
                     {Array.from({ length: Math.max(0, 5 - ws.users.length) }).map((_, i) => (
-                      <div key={`empty-${i}`} className="flex items-center justify-center h-[52px] border border-dashed border-white/10 rounded-lg text-surface-500 text-xs">
-                        + Boş Kapasite
-                      </div>
+                      <button
+                        key={`empty-${i}`}
+                        onClick={() => {
+                          setAssigningTo(ws.id)
+                          fetchUnassignedUsers()
+                        }}
+                        className="w-full flex items-center justify-center h-[52px] border border-dashed border-white/10 rounded-lg text-surface-500 text-xs hover:border-brand-500/50 hover:text-brand-400 transition-all"
+                      >
+                        + Boş Kapasite (Ekle)
+                      </button>
                     ))}
                   </div>
                 </div>
@@ -186,6 +234,58 @@ export default function AdminWorkspacesPage() {
           })
         )}
       </div>
+
+      {/* User Selection Modal */}
+      {assigningTo && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+          <div className="glass w-full max-w-md rounded-2xl shadow-2xl border border-white/10 max-h-[80vh] flex flex-col overflow-hidden">
+            <div className="p-6 border-b border-white/5">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold text-white">Kullanıcı Ata</h2>
+                <button onClick={() => setAssigningTo(null)} className="text-surface-400 hover:text-white">✕</button>
+              </div>
+              <input
+                type="text"
+                autoFocus
+                placeholder="İsim veya email ile ara..."
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                className="w-full bg-surface-900 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-brand-500"
+              />
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-2 custom-scrollbar">
+              {isUsersLoading ? (
+                <div className="p-12 text-center text-surface-400">Yükleniyor...</div>
+              ) : filteredUsers.length === 0 ? (
+                <div className="p-12 text-center text-surface-500">Uygun (atama bekleyen) kullanıcı bulunamadı.</div>
+              ) : (
+                <div className="space-y-1">
+                  {filteredUsers.map(user => (
+                    <button
+                      key={user.id}
+                      onClick={() => handleAssignUser(user.id)}
+                      className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-white/5 text-left transition-colors group border border-transparent hover:border-white/5"
+                    >
+                      <div>
+                        <div className="text-sm font-medium text-white group-hover:text-brand-400 transition-colors">{user.name || 'İsimsiz'}</div>
+                        <div className="text-xs text-surface-500">{user.email}</div>
+                      </div>
+                      <div className="text-[10px] bg-brand-500/10 text-brand-400 px-2 py-1 rounded-md opacity-0 group-hover:opacity-100 transition-all">
+                        Seç ve Ata
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            
+            <div className="p-4 bg-surface-900/50 text-center">
+               <button onClick={() => setAssigningTo(null)} className="text-sm text-surface-400 hover:text-white">Vazgeç</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

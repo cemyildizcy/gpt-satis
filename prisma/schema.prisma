@@ -28,7 +28,7 @@ model User {
   reviewedPayments Payment[]  @relation("ReviewedPayments")
   tickets          Ticket[]
   workspaceId      String?
-  workspaceAccount WorkspaceAccount? @relation(fields: [workspaceId], references: [id])
+  workspaceAccount WorkspaceAccount? @relation(fields: [workspaceId], references: [id], onDelete: SetNull)
 }
 
 model Payment {

@@ -6,11 +6,16 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
   const status = searchParams.get('status')
   const search = searchParams.get('search')
+  const unassigned = searchParams.get('unassigned') === 'true'
 
-  const where: Record<string, unknown> = { role: 'USER' }
+  const where: any = { role: 'USER' }
 
   if (status && status !== 'ALL') {
     where.status = status
+  }
+
+  if (unassigned) {
+    where.workspaceId = null
   }
 
   if (search) {
