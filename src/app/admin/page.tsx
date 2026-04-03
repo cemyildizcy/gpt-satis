@@ -8,6 +8,7 @@ interface Stats {
   expiredUsers: number
   pendingUsers: number
   pendingPayments: number
+  openTickets: number
 }
 
 export default function AdminDashboard() {
@@ -33,6 +34,7 @@ export default function AdminDashboard() {
     { label: 'Süresi Dolmuş', value: stats.expiredUsers, icon: '⏰', color: 'from-red-500 to-red-700' },
     { label: 'Beklemede', value: stats.pendingUsers, icon: '⏳', color: 'from-amber-500 to-amber-700' },
     { label: 'Bekleyen Dekont', value: stats.pendingPayments, icon: '💳', color: 'from-purple-500 to-purple-700' },
+    { label: 'Açık Talepler', value: stats.openTickets, icon: '🎫', color: 'from-brand-500 to-brand-700' },
   ]
 
   return (
@@ -42,7 +44,7 @@ export default function AdminDashboard() {
         <p className="text-surface-400 mt-1">Sistem genel bakışı</p>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 animate-slide-up">
+      <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 animate-slide-up">
         {cards.map((card, i) => (
           <div
             key={i}

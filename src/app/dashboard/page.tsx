@@ -20,6 +20,15 @@ interface Payment {
   createdAt: string
 }
 
+interface Ticket {
+  id: string
+  subject: string
+  message: string
+  reply: string | null
+  status: string
+  createdAt: string
+}
+
 interface Countdown {
   days: number
   hours: number
@@ -35,15 +44,24 @@ export default function DashboardPage() {
   const [uploadSuccess, setUploadSuccess] = useState(false)
   const [dragOver, setDragOver] = useState(false)
 
+  // Ticket states
+  const [tickets, setTickets] = useState<Ticket[]>([])
+  const [ticketSubject, setTicketSubject] = useState('')
+  const [ticketMessage, setTicketMessage] = useState('')
+  const [isSubmittingTicket, setIsSubmittingTicket] = useState(false)
+
   const fetchData = useCallback(async () => {
-    const [userRes, paymentsRes] = await Promise.all([
+    const [userRes, paymentsRes, ticketsRes] = await Promise.all([
       fetch('/api/user/profile'),
       fetch('/api/user/payments'),
+      fetch('/api/user/tickets')
     ])
     const userData = await userRes.json()
     const paymentsData = await paymentsRes.json()
+    const ticketsData = await ticketsRes.json()
     if (userData.user) setUser(userData.user)
     if (paymentsData.payments) setPayments(paymentsData.payments)
+    if (Array.isArray(ticketsData)) setTickets(ticketsData)
   }, [])
 
   useEffect(() => {
@@ -111,6 +129,32 @@ export default function DashboardPage() {
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) handleUpload(file)
+  }
+
+  const handleCreateTicket = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!ticketSubject || !ticketMessage) return
+    setIsSubmittingTicket(true)
+
+    try {
+      const res = await fetch('/api/user/tickets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ subject: ticketSubject, message: ticketMessage })
+      })
+      if (res.ok) {
+        setTicketSubject('')
+        setTicketMessage('')
+        fetchData()
+      } else {
+        const error = await res.json()
+        alert(error.error || 'Bilet oluşturulurken hata oluştu')
+      }
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setIsSubmittingTicket(false)
+    }
   }
 
   const isExpiringSoon = countdown.days <= 3 && user?.status === 'ACTIVE'
@@ -329,6 +373,97 @@ export default function DashboardPage() {
           </div>
         </div>
       )}
+
+      {/* AIPass Kullanım Rehberi (Active Users Only) */}
+      {user.status === 'ACTIVE' && (
+        <div className="glass rounded-2xl p-6 glow-sm animate-slide-up" style={{ animationDelay: '400ms' }}>
+          <h2 className="text-lg font-semibold text-white mb-4 text-brand-400">📖 AIPass Kullanım Kılavuzu</h2>
+          <div className="space-y-4 text-surface-300 text-sm">
+            <p>Aboneliğiniz aktif! Premium özelliklere ulaşmak için aşağıdaki adımları izleyin:</p>
+            <ol className="list-decimal list-inside space-y-2 ml-2">
+              <li>OpenAI (ChatGPT) giriş sayfasına (<a href="https://chatgpt.com" target="_blank" rel="noreferrer" className="text-brand-400 hover:underline">chatgpt.com</a>) gidin.</li>
+              <li>Size atanan paylaşımlı <strong className="text-white">AIPass Ekip Hesabı</strong> logini ile giriş yapın (Bilgiler mailinize gönderilmiştir veya eklenecektir).</li>
+              <li>Sol üst menüden çalışma alanını (Workspace) "AIPass Team" olarak değiştirin.</li>
+              <li>Sora, DALL-E, ve GPT-5'in tadını çıkarın! Limitlere takılmadan dilediğiniz gibi kullanın.</li>
+            </ol>
+            <div className="p-3 bg-brand-500/10 border border-brand-500/20 rounded-xl mt-4">
+              <p className="text-brand-400 font-medium">💡 İpucu: Şifreyi değiştirmeye çalışmayın, sistem otomatik kilitler.</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Destek Merkezi (Tickets) */}
+      <div className="grid md:grid-cols-2 gap-6 animate-slide-up" style={{ animationDelay: '500ms' }}>
+        {/* Yeni Destek Talebi Oluştur */}
+        <div className="glass rounded-2xl p-6 glow-sm">
+          <h2 className="text-lg font-semibold text-white mb-4">Destek Merkezi</h2>
+          <p className="text-xs text-surface-400 mb-6">Sorularınız, giriş problemleriniz veya teknik destek için bize yazın.</p>
+          <form onSubmit={handleCreateTicket} className="space-y-4">
+            <div>
+              <label className="block text-xs font-medium text-surface-400 mb-1">Konu</label>
+              <input
+                type="text"
+                required
+                value={ticketSubject}
+                onChange={e => setTicketSubject(e.target.value)}
+                className="w-full bg-surface-800/50 border border-white/10 rounded-xl px-4 py-2 text-white text-sm focus:outline-none focus:border-brand-500"
+                placeholder="Örn: Hesabıma giriş yapamıyorum"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-surface-400 mb-1">Mesajınız</label>
+              <textarea
+                required
+                rows={3}
+                value={ticketMessage}
+                onChange={e => setTicketMessage(e.target.value)}
+                className="w-full bg-surface-800/50 border border-white/10 rounded-xl px-4 py-2 text-white text-sm focus:outline-none focus:border-brand-500 resize-none"
+                placeholder="Detaylı bir şekilde açıklayın..."
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={isSubmittingTicket}
+              className="w-full py-2.5 rounded-xl bg-white text-black font-semibold hover:bg-surface-200 transition-colors disabled:opacity-50"
+            >
+              {isSubmittingTicket ? 'Gönderiliyor...' : 'Talebi Gönder'}
+            </button>
+          </form>
+        </div>
+
+        {/* Geçmiş Talepler */}
+        <div className="glass rounded-2xl p-6 glow-sm flex flex-col">
+          <h2 className="text-lg font-semibold text-white mb-4 flex items-center justify-between">
+            Taleplerim
+            <span className="bg-brand-500/20 text-brand-400 text-xs px-2 py-1 rounded-full">{tickets.length} Bilet</span>
+          </h2>
+          <div className="flex-1 overflow-y-auto space-y-3 max-h-[300px] pr-2 custom-scrollbar">
+            {tickets.length === 0 ? (
+              <p className="text-sm text-surface-500 text-center py-4">Henüz oluşturulmuş bir destek talebiniz yok.</p>
+            ) : (
+              tickets.map(ticket => (
+                <div key={ticket.id} className="p-4 rounded-xl border border-white/5 bg-surface-800/30 space-y-2">
+                  <div className="flex justify-between items-start">
+                    <h3 className="text-sm font-semibold text-white">{ticket.subject}</h3>
+                    {ticket.status === 'OPEN' && <span className="text-[10px] px-2 py-0.5 rounded bg-amber-500/20 text-amber-400">Bekliyor</span>}
+                    {ticket.status === 'ANSWERED' && <span className="text-[10px] px-2 py-0.5 rounded bg-brand-500/20 text-brand-400">Yanıtlandı</span>}
+                    {ticket.status === 'CLOSED' && <span className="text-[10px] px-2 py-0.5 rounded bg-surface-500/20 text-surface-400">Kapalı</span>}
+                  </div>
+                  <p className="text-xs text-surface-300">{ticket.message}</p>
+                  
+                  {ticket.reply && (
+                    <div className="mt-3 p-3 rounded-lg bg-brand-500/5 border border-brand-500/10">
+                      <p className="text-[10px] text-brand-400 font-bold mb-1">AIPass Destek:</p>
+                      <p className="text-xs text-surface-200">{ticket.reply}</p>
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      </div>
     </div>
   )
 }

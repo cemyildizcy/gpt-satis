@@ -26,6 +26,7 @@ model User {
   adminLogs        AdminLog[] @relation("AdminActions")
   targetLogs       AdminLog[] @relation("TargetActions")
   reviewedPayments Payment[]  @relation("ReviewedPayments")
+  tickets          Ticket[]
 }
 
 model Payment {
@@ -53,4 +54,22 @@ model AdminLog {
 
   admin  User  @relation("AdminActions", fields: [adminId], references: [id])
   target User? @relation("TargetActions", fields: [targetUserId], references: [id])
+}
+
+enum TicketStatus {
+  OPEN
+  ANSWERED
+  CLOSED
+}
+
+model Ticket {
+  id        String       @id @default(cuid())
+  userId    String
+  user      User         @relation(fields: [userId], references: [id])
+  subject   String
+  message   String
+  reply     String?
+  status    TicketStatus @default(OPEN)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
 }

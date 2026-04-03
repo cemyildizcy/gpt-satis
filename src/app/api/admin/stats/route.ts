@@ -2,13 +2,14 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
 export async function GET() {
-  const [totalUsers, activeUsers, expiredUsers, pendingUsers, pendingPayments] =
+  const [totalUsers, activeUsers, expiredUsers, pendingUsers, pendingPayments, openTickets] =
     await Promise.all([
       prisma.user.count({ where: { role: 'USER' } }),
       prisma.user.count({ where: { role: 'USER', status: 'ACTIVE' } }),
       prisma.user.count({ where: { role: 'USER', status: 'EXPIRED' } }),
       prisma.user.count({ where: { role: 'USER', status: 'PENDING' } }),
       prisma.payment.count({ where: { status: 'PENDING' } }),
+      prisma.ticket.count({ where: { status: 'OPEN' } }),
     ])
 
   return NextResponse.json({
@@ -18,6 +19,7 @@ export async function GET() {
       expiredUsers,
       pendingUsers,
       pendingPayments,
+      openTickets,
     },
   })
 }

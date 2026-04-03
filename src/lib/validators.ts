@@ -41,3 +41,9 @@ export type LoginInput = z.infer<typeof loginSchema>
 export type UserUpdateInput = z.infer<typeof userUpdateSchema>
 export type SubscriptionInput = z.infer<typeof subscriptionSchema>
 export type PaymentReviewInput = z.infer<typeof paymentReviewSchema>
+
+export const ticketSchema = z.object({
+  subject: z.string().min(3, 'Konu en az 3 karakter olmalıdır'),
+  message: z.string().min(10, 'Mesajınız en az 10 karakter olmalıdır'),
+})
+export type TicketInput = z.infer<typeof ticketSchema>
