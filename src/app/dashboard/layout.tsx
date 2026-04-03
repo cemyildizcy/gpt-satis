@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
 
 interface User {
@@ -12,7 +12,6 @@ interface User {
   status: string
   subscriptionStart: string | null
   subscriptionEnd: string | null
-  addedToWorkspace: boolean
 }
 
 export default function DashboardLayout({
@@ -24,6 +23,7 @@ export default function DashboardLayout({
   const [loading, setLoading] = useState(true)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const router = useRouter()
+  const pathname = usePathname()
 
   useEffect(() => {
     fetch('/api/auth/me')
@@ -47,9 +47,22 @@ export default function DashboardLayout({
   if (loading) {
     return (
       <div className="min-h-screen bg-surface-950 flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-10 h-10 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
+          <p className="text-surface-400 text-sm animate-pulse">Yükleniyor...</p>
+        </div>
       </div>
     )
+  }
+
+  const navLinks = [
+    { href: '/dashboard', label: 'Ana Sayfa', icon: '🏠' },
+  ]
+
+  const statusColors: Record<string, string> = {
+    ACTIVE: 'bg-emerald-500',
+    EXPIRED: 'bg-red-500',
+    PENDING: 'bg-amber-500',
   }
 
   return (
@@ -86,15 +99,39 @@ export default function DashboardLayout({
 
           {/* Nav */}
           <nav className="flex-1 p-4 space-y-1">
-            <Link
-              href="/dashboard"
-              className="flex items-center gap-3 px-4 py-3 rounded-xl text-white bg-brand-500/10 border border-brand-500/20"
-            >
-              <svg className="w-5 h-5 text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-              </svg>
-              Dashboard
-            </Link>
+            {navLinks.map((link) => {
+              const isActive = pathname === link.href
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  onClick={() => setSidebarOpen(false)}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
+                    isActive
+                      ? 'text-white bg-brand-500/10 border border-brand-500/20'
+                      : 'text-surface-400 hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  <span className="text-lg">{link.icon}</span>
+                  {link.label}
+                </Link>
+              )
+            })}
+
+            {/* Status indicator */}
+            <div className="mt-6 p-4 rounded-xl bg-surface-800/30 border border-white/5">
+              <div className="flex items-center gap-2 mb-2">
+                <div className={`w-2 h-2 rounded-full ${statusColors[user?.status || 'PENDING']} animate-pulse`} />
+                <span className="text-xs font-medium text-surface-300">
+                  {user?.status === 'ACTIVE' ? 'Abonelik Aktif' : user?.status === 'EXPIRED' ? 'Süresi Dolmuş' : 'Onay Bekliyor'}
+                </span>
+              </div>
+              <p className="text-[10px] text-surface-500">
+                {user?.subscriptionEnd
+                  ? `Bitiş: ${new Date(user.subscriptionEnd).toLocaleDateString('tr-TR')}`
+                  : 'Henüz abonelik yok'}
+              </p>
+            </div>
           </nav>
 
           {/* User info */}
@@ -102,7 +139,7 @@ export default function DashboardLayout({
             <div className="flex items-center gap-3 mb-3">
               <div className="w-9 h-9 rounded-full bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center">
                 <span className="text-white text-sm font-semibold">
-                  {user?.name?.charAt(0) || user?.email?.charAt(0) || '?'}
+                  {user?.name?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase() || '?'}
                 </span>
               </div>
               <div className="flex-1 min-w-0">
@@ -112,8 +149,11 @@ export default function DashboardLayout({
             </div>
             <button
               onClick={handleLogout}
-              className="w-full px-4 py-2 rounded-xl text-sm text-surface-400 hover:text-white hover:bg-surface-800 transition-all"
+              className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-sm text-surface-400 hover:text-red-400 hover:bg-red-500/10 transition-all border border-transparent hover:border-red-500/20"
             >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
               Çıkış Yap
             </button>
           </div>

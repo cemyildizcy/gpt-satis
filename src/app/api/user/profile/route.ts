@@ -14,7 +14,6 @@ export async function GET(request: Request) {
       status: true,
       subscriptionStart: true,
       subscriptionEnd: true,
-      addedToWorkspace: true,
       createdAt: true,
     },
   })
@@ -24,4 +23,34 @@ export async function GET(request: Request) {
   }
 
   return NextResponse.json({ user })
+}
+
+export async function PUT(request: Request) {
+  try {
+    const userId = request.headers.get('x-user-id')!
+    const body = await request.json()
+    const { name } = body
+
+    if (!name || name.length < 2) {
+      return NextResponse.json({ error: 'İsim en az 2 karakter olmalıdır' }, { status: 400 })
+    }
+
+    const user = await prisma.user.update({
+      where: { id: userId },
+      data: { name },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        status: true,
+        subscriptionStart: true,
+        subscriptionEnd: true,
+      },
+    })
+
+    return NextResponse.json({ user })
+  } catch (error) {
+    console.error('Profile update error:', error)
+    return new NextResponse('Internal Server Error', { status: 500 })
+  }
 }

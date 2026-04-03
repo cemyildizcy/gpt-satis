@@ -155,7 +155,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
              <div className="w-6 h-6 rounded bg-brand-500 text-center text-xs font-bold flex items-center justify-center">A</div>
-             <span className="text-surface-300 font-medium">AIPass © 2024</span>
+             <span className="text-surface-300 font-medium">AIPass © 2025</span>
           </div>
           <div className="text-surface-500 text-sm">
             Paylaşımlı AI Erişimi Yönetim Platformu
