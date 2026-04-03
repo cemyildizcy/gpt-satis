@@ -27,6 +27,8 @@ model User {
   targetLogs       AdminLog[] @relation("TargetActions")
   reviewedPayments Payment[]  @relation("ReviewedPayments")
   tickets          Ticket[]
+  workspaceId      String?
+  workspaceAccount WorkspaceAccount? @relation(fields: [workspaceId], references: [id])
 }
 
 model Payment {
@@ -72,4 +74,15 @@ model Ticket {
   status    TicketStatus @default(OPEN)
   createdAt DateTime     @default(now())
   updatedAt DateTime     @updatedAt
+}
+
+model WorkspaceAccount {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String?
+  status    String   @default("ACTIVE")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  users     User[]
 }

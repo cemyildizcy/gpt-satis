@@ -11,8 +11,8 @@ interface UserDetail {
   role: string
   subscriptionStart: string | null
   subscriptionEnd: string | null
-  addedToWorkspace: boolean
   notes: string | null
+  workspaceId: string | null
   createdAt: string
   payments: {
     id: string
@@ -34,6 +34,8 @@ export default function AdminUserDetailPage({
   const [notes, setNotes] = useState('')
   const [status, setStatus] = useState('')
   const [subscriptionEnd, setSubscriptionEnd] = useState('')
+  const [workspaceId, setWorkspaceId] = useState('')
+  const [workspaces, setWorkspaces] = useState<any[]>([])
   const [saving, setSaving] = useState(false)
   const router = useRouter()
 
@@ -45,12 +47,18 @@ export default function AdminUserDetailPage({
           setUser(data.user)
           setNotes(data.user.notes || '')
           setStatus(data.user.status)
+          setWorkspaceId(data.user.workspaceId || '')
           if (data.user.subscriptionEnd) {
-            // Format to YYYY-MM-DD for date input
             const dateStr = new Date(data.user.subscriptionEnd).toISOString().split('T')[0]
             setSubscriptionEnd(dateStr)
           }
         }
+      })
+      
+    fetch('/api/admin/workspaces')
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) setWorkspaces(data)
       })
   }, [id])
 
@@ -62,11 +70,19 @@ export default function AdminUserDetailPage({
       parsedDate = new Date(subscriptionEnd).toISOString()
     }
 
-    await fetch(`/api/admin/users/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ notes, status, subscriptionEnd: parsedDate }),
-    })
+    await Promise.all([
+      fetch(`/api/admin/users/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ notes, status, subscriptionEnd: parsedDate }),
+      }),
+      fetch(`/api/admin/users/${id}/workspace`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ workspaceId: workspaceId || null }),
+      })
+    ])
+
     setSaving(false)
     router.push('/admin/users')
   }
@@ -136,6 +152,26 @@ export default function AdminUserDetailPage({
               className="w-full px-4 py-3 rounded-xl bg-surface-800/50 border border-surface-700 text-white focus:outline-none focus:ring-2 focus:ring-brand-500/50"
             />
           </div>
+        </div>
+
+        <div>
+           <label className="text-xs text-surface-400 block mb-2">AIPass Ana Hesabı (Konteyneri)</label>
+           <select
+             value={workspaceId}
+             onChange={e => setWorkspaceId(e.target.value)}
+             className="w-full px-4 py-3 rounded-xl bg-surface-800/50 border border-brand-500/30 text-white focus:outline-none focus:ring-2 focus:ring-brand-500/50"
+           >
+             <option value="">Atanmadı (Boşta)</option>
+             {workspaces.map(ws => {
+               const assignedCount = ws.users?.length || 0
+               const isFull = assignedCount >= 5
+               return (
+                 <option key={ws.id} value={ws.id} disabled={isFull && ws.id !== user?.workspaceId}>
+                   {ws.name || ws.email} ({assignedCount}/5) {isFull && ws.id !== user?.workspaceId ? '- DOLU' : ''}
+                 </option>
+               )
+             })}
+           </select>
         </div>
 
         <div>
