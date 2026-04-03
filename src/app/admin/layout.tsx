@@ -78,16 +78,16 @@ export default function AdminLayout({
         <div className="flex flex-col h-full">
           {/* Logo */}
           <div className="p-6 border-b border-white/5">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-red-500 to-red-700 flex items-center justify-center">
-                <span className="text-white font-bold text-sm">A</span>
-              </div>
-              <div>
-                <span className="text-lg font-bold text-white">Admin Panel</span>
-                <p className="text-xs text-surface-400">GPT Satış</p>
-              </div>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-red-500 to-red-700 flex items-center justify-center shadow-lg shadow-red-500/20">
+              <span className="text-white font-bold text-xl">A</span>
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-white tracking-tight">AIPass</h2>
+              <p className="text-xs text-red-400 font-medium tracking-wide">YÖNETİM</p>
             </div>
           </div>
+        </div>
 
           {/* Nav */}
           <nav className="flex-1 p-4 space-y-1">

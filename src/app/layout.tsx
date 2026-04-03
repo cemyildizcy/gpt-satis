@@ -2,8 +2,8 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'GPT Satış - AI Abonelik Yönetim Platformu',
-  description: 'Paylaşımlı ChatGPT Business ekip üyeliği erişimi sağlayan premium platform',
+  title: 'AIPass - Premium Yapay Zeka',
+  description: 'ChatGPT, GPT-5, Sora ve daha fazlası için paylaşımlı abonelik platformu.',
   keywords: ['ChatGPT', 'AI', 'abonelik', 'ekip üyeliği'],
 }
 
