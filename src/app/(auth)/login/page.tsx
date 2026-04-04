@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -48,9 +49,7 @@ export default function LoginPage() {
         {/* Logo */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-3 mb-8">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center shadow-xl shadow-brand-500/30">
-              <span className="text-white font-bold text-2xl">A</span>
-            </div>
+            <Image src="/logo.png" alt="AIPass Logo" width={48} height={48} className="rounded-2xl shadow-xl shadow-brand-500/30" />
             <span className="text-2xl font-bold text-white tracking-tight">AIPass</span>
           </div>
         </div>

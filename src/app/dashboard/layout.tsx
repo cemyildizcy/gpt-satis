@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 
 interface User {
   id: string
@@ -87,9 +88,7 @@ export default function DashboardLayout({
           {/* Brand */}
           <div className="p-6 border-b border-white/5">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center shadow-lg shadow-brand-500/20">
-                <span className="text-white font-bold text-xl">A</span>
-              </div>
+              <Image src="/logo.png" alt="AIPass Logo" width={40} height={40} className="rounded-xl shadow-lg shadow-brand-500/20" />
               <div>
                 <h2 className="text-xl font-bold text-white tracking-tight">AIPass</h2>
                 <p className="text-xs text-brand-400 font-medium tracking-wide">ÜYE PANELİ</p>
