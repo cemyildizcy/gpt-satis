@@ -57,6 +57,7 @@ export default function AdminLayout({
     { href: '/admin/payments', label: 'Dekontlar', icon: '💳' },
     { href: '/admin/tickets', label: 'Destek Talepleri', icon: '🎫' },
     { href: '/admin/workspaces', label: 'Ana Hesaplar', icon: '🏢' },
+    { href: '/admin/announcements', label: 'Duyurular', icon: '📢' },
     { href: '/admin/logs', label: 'İşlem Logları', icon: '📋' },
   ]
 

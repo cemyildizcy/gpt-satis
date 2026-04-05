@@ -74,6 +74,47 @@ export async function sendSetupGuideEmail(to: string, name: string) {
   }
 }
 
+export async function sendExpiringSoonEmail(to: string, name: string, daysLeft: number) {
+  try {
+    await resend.emails.send({
+      from: FROM_EMAIL,
+      to,
+      subject: `⏳ Aboneliğiniz ${daysLeft} Gün İçinde Sona Erecek — AIPass`,
+      html: getExpiringSoonTemplate(name, daysLeft),
+    })
+    console.log(`✅ Expiring soon email sent to ${to}`)
+  } catch (error) {
+    console.error('❌ Email send error:', error)
+  }
+}
+
+export async function sendSubscriptionExpiredEmail(to: string, name: string) {
+  try {
+    await resend.emails.send({
+      from: FROM_EMAIL,
+      to,
+      subject: '⌛ Aboneliğiniz Sona Erdi — AIPass',
+      html: getSubscriptionExpiredTemplate(name),
+    })
+    console.log(`✅ Subscription expired email sent to ${to}`)
+  } catch (error) {
+    console.error('❌ Email send error:', error)
+  }
+}
+
+export async function sendAnnouncementEmail(to: string, name: string, title: string, message: string) {
+  try {
+    await resend.emails.send({
+      from: FROM_EMAIL,
+      to,
+      subject: `${title}`,
+      html: getAnnouncementTemplate(name, title, message),
+    })
+  } catch (error) {
+    console.error('❌ Email send error:', error)
+  }
+}
+
 // ─── Email Templates ─────────────────────────────────────
 
 function baseTemplate(content: string) {
@@ -288,6 +329,53 @@ function getSetupGuideTemplate(name: string) {
       <p style="color:#999; font-size:14px; line-height:1.6; margin:0 0 4px 0;">Herhangi bir sorunda yanındayız 🤝</p>
       <p style="color:#999; font-size:14px; margin:0 0 12px 0;">İyi kullanımlar dileriz!</p>
       <p style="color:#ffffff; font-size:15px; font-weight:700; margin:0;">Cem YILDIZ</p>
+    </div>
+  `)
+}
+
+function getExpiringSoonTemplate(name: string, daysLeft: number) {
+  return baseTemplate(`
+    <h2 style="color:#ffffff; font-size:22px; font-weight:700; margin:0 0 8px 0;">Abonelik Süreniz Azaldı ⏳</h2>
+    <p style="color:#999; font-size:15px; line-height:1.6; margin:0 0 24px 0;">
+      Merhaba ${name}, AIPass kullanım sürenizin bitmesine <strong>${daysLeft} gün</strong> kaldı. Erişimin kesilmemesi için panelden dekontunuzu yükleyerek yenileme yapabilirsiniz.
+    </p>
+    <div style="text-align:center;">
+      <a href="https://aipass.com.tr/dashboard" 
+         style="display:inline-block; background:linear-gradient(135deg, #f59e0b, #d97706); color:#ffffff; font-size:15px; font-weight:700; text-decoration:none; padding:14px 36px; border-radius:12px;">
+        Aboneliği Yenile →
+      </a>
+    </div>
+  `)
+}
+
+function getSubscriptionExpiredTemplate(name: string) {
+  return baseTemplate(`
+    <h2 style="color:#ffffff; font-size:22px; font-weight:700; margin:0 0 8px 0;">Aboneliğiniz Sona Erdi ⌛</h2>
+    <p style="color:#999; font-size:15px; line-height:1.6; margin:0 0 24px 0;">
+      Merhaba ${name}, AIPass aboneliğinizin süresi maalesef doldu ve çalışma alanına erişiminiz kesildi. 
+      Limitleri kaldırmak ve tüm özelliklere yeniden erişmek için hesabınızı anında yenileyebilirsiniz.
+    </p>
+    <div style="text-align:center;">
+      <a href="https://aipass.com.tr/dashboard" 
+         style="display:inline-block; background:linear-gradient(135deg, #ef4444, #dc2626); color:#ffffff; font-size:15px; font-weight:700; text-decoration:none; padding:14px 36px; border-radius:12px;">
+        Hemen Yenile →
+      </a>
+    </div>
+  `)
+}
+
+function getAnnouncementTemplate(name: string, title: string, message: string) {
+  return baseTemplate(`
+    <h2 style="color:#ffffff; font-size:22px; font-weight:700; margin:0 0 8px 0;">${title}</h2>
+    <div style="color:#999; font-size:15px; line-height:1.6; margin:0 0 24px 0;">
+      Merhaba ${name}, <br/><br/>
+      ${message.replace(/\n/g, '<br/>')}
+    </div>
+    <div style="text-align:center;">
+      <a href="https://aipass.com.tr/dashboard" 
+         style="display:inline-block; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:#ffffff; font-size:15px; font-weight:600; text-decoration:none; padding:12px 24px; border-radius:12px;">
+        Panele Git
+      </a>
     </div>
   `)
 }
