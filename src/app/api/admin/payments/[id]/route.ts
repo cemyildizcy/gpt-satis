@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { paymentReviewSchema } from '@/lib/validators'
 import { addMonths } from '@/lib/subscription'
+import { sendPaymentApprovedEmail, sendSubscriptionActiveEmail } from '@/lib/mail'
 
 export async function PUT(
   request: Request,
@@ -74,6 +75,11 @@ export async function PUT(
           status: 'ACTIVE',
         },
       })
+
+      // Send emails to user
+      const userName = user.name || ''
+      sendPaymentApprovedEmail(user.email, userName).catch(() => {})
+      sendSubscriptionActiveEmail(user.email, userName).catch(() => {})
     }
 
     await prisma.adminLog.create({

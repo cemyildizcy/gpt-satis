@@ -4,6 +4,7 @@ import { hashPassword } from '@/lib/password'
 import { registerSchema } from '@/lib/validators'
 import { signToken, setSessionCookie } from '@/lib/auth'
 import { rateLimit } from '@/lib/rate-limit'
+import { sendWelcomeEmail } from '@/lib/mail'
 
 export async function POST(request: Request) {
   try {
@@ -52,6 +53,9 @@ export async function POST(request: Request) {
         status: 'PENDING',
       },
     })
+
+    // Send welcome email (async, don't block registration)
+    sendWelcomeEmail(user.email, user.name || '').catch(() => {})
 
     const token = await signToken({
       userId: user.id,
