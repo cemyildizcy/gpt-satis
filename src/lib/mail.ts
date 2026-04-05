@@ -46,6 +46,20 @@ export async function sendSubscriptionActiveEmail(to: string, name: string) {
   }
 }
 
+export async function sendSetupGuideEmail(to: string, name: string) {
+  try {
+    await resend.emails.send({
+      from: FROM_EMAIL,
+      to,
+      subject: "AIPass'e Hoş Geldin \u2013 Kurulum Bilgileri",
+      html: getSetupGuideTemplate(name),
+    })
+    console.log(`✅ Setup guide email sent to ${to}`)
+  } catch (error) {
+    console.error('❌ Email send error:', error)
+  }
+}
+
 // ─── Email Templates ─────────────────────────────────────
 
 function baseTemplate(content: string) {
@@ -170,6 +184,74 @@ function getSubscriptionActiveTemplate(name: string) {
          style="display:inline-block; background:linear-gradient(135deg, #7c5cfc, #5e30d6); color:#ffffff; font-size:15px; font-weight:700; text-decoration:none; padding:14px 36px; border-radius:12px;">
         ChatGPT'yi Kullanmaya Başla →
       </a>
+    </div>
+  `)
+}
+
+function getSetupGuideTemplate(name: string) {
+  return baseTemplate(`
+    <p style="color:#999; font-size:16px; margin:0 0 16px 0;">Merhaba 👋</p>
+    <h2 style="color:#ffffff; font-size:22px; font-weight:700; margin:0 0 8px 0;">AIPass'e hoş geldin!</h2>
+    <p style="color:#999; font-size:15px; line-height:1.6; margin:0 0 24px 0;">
+      Hesabın başarıyla oluşturuldu. Şimdi sana kısaca kurulum sürecini anlatıyoruz:
+    </p>
+
+    <!-- Kurulum Adımları -->
+    <div style="background:rgba(124,92,252,0.1); border:1px solid rgba(124,92,252,0.2); border-radius:16px; padding:24px; margin-bottom:24px;">
+      <p style="color:#ffffff; font-size:15px; font-weight:700; margin:0 0 16px 0;">🔷 Kurulum Adımları</p>
+      <table style="width:100%; border-collapse:collapse;">
+        <tr>
+          <td style="color:#7c5cfc; font-size:15px; font-weight:700; padding:8px 14px 8px 0; vertical-align:top;">1.</td>
+          <td style="color:#ccc; font-size:14px; line-height:1.6; padding:8px 0;">Kısa süre içinde OpenAI tarafından sana bir <strong style="color:#fff;">davet maili</strong> gönderilecek.</td>
+        </tr>
+        <tr>
+          <td style="color:#7c5cfc; font-size:15px; font-weight:700; padding:8px 14px 8px 0; vertical-align:top;">2.</td>
+          <td style="color:#ccc; font-size:14px; line-height:1.6; padding:8px 0;">Mailin içindeki <strong style="color:#fff;">bağlantıya tıkla.</strong></td>
+        </tr>
+        <tr>
+          <td style="color:#7c5cfc; font-size:15px; font-weight:700; padding:8px 14px 8px 0; vertical-align:top;">3.</td>
+          <td style="color:#ccc; font-size:14px; line-height:1.6; padding:8px 0;">Açılan sayfada <strong style="color:#fff;">hesabınla giriş yap.</strong></td>
+        </tr>
+        <tr>
+          <td style="color:#7c5cfc; font-size:15px; font-weight:700; padding:8px 14px 8px 0; vertical-align:top;">4.</td>
+          <td style="color:#ccc; font-size:14px; line-height:1.6; padding:8px 0;">Çalışma alanı (workspace) olarak <strong style="color:#fff;">&quot;AIPass&quot;</strong> seç.</td>
+        </tr>
+      </table>
+      <p style="color:#999; font-size:14px; line-height:1.6; margin:16px 0 0 0;">
+        Bu işlemleri tamamladıktan sonra hesabın aktif şekilde kullanıma hazır olacaktır 🚀
+      </p>
+    </div>
+
+    <!-- Önemli Not -->
+    <div style="background:rgba(251,191,36,0.08); border:1px solid rgba(251,191,36,0.2); border-radius:16px; padding:16px 20px; margin-bottom:24px;">
+      <p style="color:#fbbf24; font-size:14px; font-weight:600; margin:0 0 4px 0;">⚠️ Önemli Not:</p>
+      <p style="color:#ccc; font-size:14px; line-height:1.5; margin:0;">
+        Eğer davet maili gelmezse <strong style="color:#fff;">spam klasörünü</strong> kontrol etmeyi unutma.
+      </p>
+    </div>
+
+    <!-- Yardım -->
+    <div style="background:rgba(124,92,252,0.05); border:1px solid rgba(255,255,255,0.06); border-radius:16px; padding:20px; margin-bottom:24px;">
+      <p style="color:#ffffff; font-size:14px; font-weight:600; margin:0 0 12px 0;">🛠 Yardım Gerekirse</p>
+      <p style="color:#999; font-size:14px; line-height:1.6; margin:0 0 12px 0;">
+        Kurulumda sorun yaşarsan bize kolayca ulaşabilirsin:
+      </p>
+      <p style="color:#ccc; font-size:14px; line-height:1.6; margin:0 0 4px 0;">
+        👉 <strong style="color:#fff;">WhatsApp destek:</strong>
+      </p>
+      <p style="margin:0 0 12px 0;">
+        <a href="https://wa.me/905344630465" style="color:#7c5cfc; text-decoration:none; font-size:14px;">https://wa.me/905344630465</a>
+      </p>
+      <p style="color:#999; font-size:14px; line-height:1.5; margin:0;">
+        ya da bu maile direkt yanıt vererek bizimle iletişime geçebilirsin.
+      </p>
+    </div>
+
+    <!-- İmza -->
+    <div style="border-top:1px solid rgba(255,255,255,0.06); padding-top:20px;">
+      <p style="color:#999; font-size:14px; line-height:1.6; margin:0 0 4px 0;">Herhangi bir sorunda yanındayız 🤝</p>
+      <p style="color:#999; font-size:14px; margin:0 0 12px 0;">İyi kullanımlar dileriz!</p>
+      <p style="color:#ffffff; font-size:15px; font-weight:700; margin:0;">Cem YILDIZ</p>
     </div>
   `)
 }
