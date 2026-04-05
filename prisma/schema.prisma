@@ -29,6 +29,7 @@ model User {
   tickets          Ticket[]
   workspaceId      String?
   workspaceAccount WorkspaceAccount? @relation(fields: [workspaceId], references: [id], onDelete: SetNull)
+  notifications    Notification[]
 }
 
 model Payment {
@@ -85,4 +86,15 @@ model WorkspaceAccount {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   users     User[]
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

@@ -76,11 +76,18 @@ export async function PUT(
         },
       })
 
-      // Send emails to user
+      // Send email to user (Approval only)
       const userName = user.name || ''
       sendPaymentApprovedEmail(user.email, userName).catch(() => {})
-      sendSubscriptionActiveEmail(user.email, userName).catch(() => {})
-      sendSetupGuideEmail(user.email, userName).catch(() => {})
+
+      // Create notification
+      await prisma.notification.create({
+        data: {
+          userId: user.id,
+          title: '✅ Ödemeniz Onaylandı',
+          message: 'Ödemeniz başarıyla onaylandı ve hesabınız aktif edildi.'
+        }
+      })
     }
 
     await prisma.adminLog.create({

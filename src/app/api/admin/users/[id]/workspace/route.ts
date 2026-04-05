@@ -28,6 +28,21 @@ export async function PUT(
       }
     })
 
+    if (workspaceId) {
+      await prisma.notification.create({
+        data: {
+          userId: userId,
+          title: '📖 Çalışma Alanınız Atandı',
+          message: 'Sizi OpenAI çalışma alanımıza davet ettik. Kurulum rehberini kullanarak giriş yapabilirsiniz.'
+        }
+      })
+      
+      const user = await prisma.user.findUnique({ where: { id: userId } })
+      if (user?.email) {
+        import('@/lib/mail').then(m => m.sendSetupGuideEmail(user.email, user.name || '').catch(() => {}))
+      }
+    }
+
     return NextResponse.json(updatedUser)
   } catch (error) {
     console.error('Assign workspace error:', error)

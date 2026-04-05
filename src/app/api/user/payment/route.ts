@@ -91,6 +91,20 @@ export async function POST(request: Request) {
       },
     })
 
+    // Create Notification & Send Email
+    const user = await prisma.user.findUnique({ where: { id: userId } })
+    if (user?.email) {
+      await prisma.notification.create({
+        data: {
+          userId,
+          title: '📄 Dekontunuz Alındı',
+          message: 'Ödeme dekontunuz başarıyla alındı ve admin onayına iletildi.'
+        }
+      })
+      const userName = user.name || ''
+      import('@/lib/mail').then(m => m.sendReceiptReceivedEmail(user.email, userName).catch(() => {}))
+    }
+
     return NextResponse.json({ payment }, { status: 201 })
   } catch (error) {
     console.error('Payment upload error:', error)

@@ -18,6 +18,20 @@ export async function sendWelcomeEmail(to: string, name: string) {
   }
 }
 
+export async function sendReceiptReceivedEmail(to: string, name: string) {
+  try {
+    await resend.emails.send({
+      from: FROM_EMAIL,
+      to,
+      subject: '📄 Dekontunuz Alındı — AIPass',
+      html: getReceiptReceivedTemplate(name),
+    })
+    console.log(`✅ Receipt received email sent to ${to}`)
+  } catch (error) {
+    console.error('❌ Email send error:', error)
+  }
+}
+
 export async function sendPaymentApprovedEmail(to: string, name: string) {
   try {
     await resend.emails.send({
@@ -136,6 +150,28 @@ function getWelcomeTemplate(name: string) {
         bize ulaşabilir veya <a href="mailto:iletisim@aipass.com.tr" style="color:#7c5cfc; text-decoration:none;">iletisim@aipass.com.tr</a> 
         adresine yazabilirsiniz.
       </p>
+    </div>
+  `)
+}
+
+function getReceiptReceivedTemplate(name: string) {
+  return baseTemplate(`
+    <p style="color:#999; font-size:16px; margin:0 0 16px 0;">Merhaba ${name} 👋</p>
+    <h2 style="color:#ffffff; font-size:22px; font-weight:700; margin:0 0 8px 0;">📄 Dekontunuz Alındı!</h2>
+    <p style="color:#999; font-size:15px; line-height:1.6; margin:0 0 24px 0;">
+      Ödeme dekontunuzu başarıyla aldık ve admin onayına ilettik. Ekiplerimiz en kısa sürede kontrol işlemlerini tamamlayıp hesabınızı aktif edecektir.
+    </p>
+    <div style="background:rgba(251,191,36,0.08); border:1px solid rgba(251,191,36,0.2); border-radius:16px; padding:16px 20px; margin-bottom:24px;">
+      <p style="color:#fbbf24; font-size:14px; font-weight:600; margin:0 0 4px 0;">⏳ Bekleme Süresi</p>
+      <p style="color:#ccc; font-size:14px; line-height:1.5; margin:0;">
+        Kontrol süreci <strong>15 - 30 dakika</strong> arasında sürebilir. Onaylandığında size tekrar haber vereceğiz.
+      </p>
+    </div>
+    <div style="text-align:center;">
+      <a href="https://aipass.com.tr/dashboard" 
+         style="display:inline-block; background:linear-gradient(135deg, #7c5cfc, #5e30d6); color:#ffffff; font-size:15px; font-weight:700; text-decoration:none; padding:14px 36px; border-radius:12px;">
+        Panelden Durumu Takip Et →
+      </a>
     </div>
   `)
 }

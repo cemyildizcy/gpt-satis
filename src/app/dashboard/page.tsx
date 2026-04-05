@@ -36,6 +36,14 @@ interface Countdown {
   seconds: number
 }
 
+interface Notification {
+  id: string
+  title: string
+  message: string
+  isRead: boolean
+  createdAt: string
+}
+
 export default function DashboardPage() {
   const [user, setUser] = useState<User | null>(null)
   const [payments, setPayments] = useState<Payment[]>([])
@@ -59,6 +67,10 @@ export default function DashboardPage() {
   // FAQ states
   const [openFaq, setOpenFaq] = useState<number | null>(null)
 
+  // Notification states
+  const [notifications, setNotifications] = useState<Notification[]>([])
+  const [showNotifications, setShowNotifications] = useState(false)
+
   const fetchUser = useCallback(async () => {
     const res = await fetch('/api/user/profile')
     const data = await res.json()
@@ -77,11 +89,30 @@ export default function DashboardPage() {
     if (Array.isArray(data)) setTickets(data)
   }, [])
 
+  const fetchNotifications = useCallback(async () => {
+    const res = await fetch('/api/user/notifications')
+    if (res.ok) {
+      const data = await res.json()
+      if (Array.isArray(data)) setNotifications(data)
+    }
+  }, [])
+
   useEffect(() => {
     fetchUser()
     fetchPayments()
     fetchTickets()
-  }, [fetchUser, fetchPayments, fetchTickets])
+    fetchNotifications()
+  }, [fetchUser, fetchPayments, fetchTickets, fetchNotifications])
+
+  const markNotificationsAsRead = async () => {
+    if (!notifications.some(n => !n.isRead)) return
+    try {
+      await fetch('/api/user/notifications', { method: 'PUT' })
+      setNotifications(prev => prev.map(n => ({ ...n, isRead: true })))
+    } catch (err) {
+      console.error(err)
+    }
+  }
 
   // Countdown timer
   useEffect(() => {
@@ -286,6 +317,48 @@ export default function DashboardPage() {
             >
               ✏️
             </button>
+            <div className="relative">
+              <button
+                onClick={() => { setShowNotifications(!showNotifications); if(!showNotifications) markNotificationsAsRead(); }}
+                className="p-2 rounded-xl glass-hover text-surface-400 hover:text-white relative text-sm"
+                title="Bildirimler"
+              >
+                🔔
+                {notifications.some(n => !n.isRead) && (
+                  <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-surface-900 animate-pulse" />
+                )}
+              </button>
+              
+              {/* Notification Dropdown */}
+              {showNotifications && (
+                <div className="absolute right-0 mt-2 w-80 max-h-96 overflow-y-auto glass border border-white/5 rounded-2xl shadow-2xl z-50 animate-fade-in custom-scrollbar">
+                  <div className="p-4 border-b border-white/5 sticky top-0 backdrop-blur-md">
+                    <h3 className="text-white font-semibold flex items-center justify-between">
+                      Bildirimler
+                      <span className="bg-brand-500/20 text-brand-400 text-xs px-2 py-1 rounded-full">{notifications.length}</span>
+                    </h3>
+                  </div>
+                  <div className="p-2 flex flex-col gap-1">
+                    {notifications.length === 0 ? (
+                      <div className="text-center py-6 text-surface-500 text-sm">
+                        <span className="text-3xl block mb-2">📭</span>
+                        Yeni bildiriminiz yok.
+                      </div>
+                    ) : (
+                      notifications.map(notif => (
+                        <div key={notif.id} className="p-3 rounded-xl hover:bg-white/5 transition-colors">
+                          <p className="text-sm font-semibold text-white mb-1">{notif.title}</p>
+                          <p className="text-xs text-surface-300 line-clamp-2">{notif.message}</p>
+                          <p className="text-[10px] text-surface-500 mt-2">
+                            {new Date(notif.createdAt).toLocaleString('tr-TR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                          </p>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -490,20 +563,51 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* AIPass Usage Guide (Active Users Only) */}
+      {/* Setup Guide (Active Users Only) */}
       {user.status === 'ACTIVE' && (
         <div className="glass rounded-2xl p-6 glow-sm animate-slide-up" style={{ animationDelay: '400ms' }}>
-          <h2 className="text-lg font-semibold text-brand-400 mb-4">📖 AIPass Kullanım Kılavuzu</h2>
-          <div className="space-y-4 text-surface-300 text-sm">
-            <p>Aboneliğiniz aktif! Premium özelliklere ulaşmak için aşağıdaki adımları izleyin:</p>
-            <ol className="list-decimal list-inside space-y-2 ml-2">
-              <li>OpenAI (ChatGPT) giriş sayfasına (<a href="https://chatgpt.com" target="_blank" rel="noreferrer" className="text-brand-400 hover:underline">chatgpt.com</a>) gidin.</li>
-              <li>Size atanan paylaşımlı <strong className="text-white">AIPass Ekip Hesabı</strong> bilgileri ile giriş yapın.</li>
-              <li>Sol üst menüden çalışma alanını &quot;AIPass Team&quot; olarak değiştirin.</li>
-              <li>Sora, DALL-E ve GPT-5&apos;in tadını çıkarın! Limitlere takılmadan kullanın.</li>
-            </ol>
-            <div className="p-3 bg-brand-500/10 border border-brand-500/20 rounded-xl mt-4">
-              <p className="text-brand-400 font-medium">💡 İpucu: Şifreyi değiştirmeye çalışmayın, sistem otomatik kilitler.</p>
+          <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
+            <span>📖</span> Kurulum ve Kullanım Rehberi
+          </h2>
+          <div className="space-y-6">
+            <div className="bg-brand-500/10 border border-brand-500/20 rounded-2xl p-6">
+              <h3 className="text-white font-semibold mb-4">🔷 Kurulum Adımları</h3>
+              <div className="space-y-4">
+                <div className="flex gap-4">
+                  <div className="w-8 h-8 rounded-full bg-brand-500/20 flex items-center justify-center text-brand-400 font-bold shrink-0">1</div>
+                  <p className="text-surface-300 text-sm mt-1.5">Kayıtlı e-posta adresinize OpenAI tarafından gönderilen <strong>davet mailini</strong> bekleyin ve içindeki bağlantıya tıklayın.</p>
+                </div>
+                <div className="flex gap-4">
+                  <div className="w-8 h-8 rounded-full bg-brand-500/20 flex items-center justify-center text-brand-400 font-bold shrink-0">2</div>
+                  <p className="text-surface-300 text-sm mt-1.5">Açılan OpenAI (ChatGPT) sayfasında kendi hesabınızla giriş yapın veya kayıt olun.</p>
+                </div>
+                <div className="flex gap-4">
+                  <div className="w-8 h-8 rounded-full bg-brand-500/20 flex items-center justify-center text-brand-400 font-bold shrink-0">3</div>
+                  <p className="text-surface-300 text-sm mt-1.5">Çalışma alanı (Workspace) seçimi sorulduğunda <strong>&quot;AIPass&quot;</strong> çalışma alanını seçin.</p>
+                </div>
+                <div className="flex gap-4">
+                  <div className="w-8 h-8 rounded-full bg-brand-500/20 flex items-center justify-center text-brand-400 font-bold shrink-0">4</div>
+                  <p className="text-surface-300 text-sm mt-1.5">Tebrikler! Artık ChatGPT Plus ve tüm premium özelliklere sınırsız erişiminiz var 🚀</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-5">
+                <h3 className="text-amber-400 font-semibold mb-2 text-sm flex items-center gap-2"><span>⚠️</span> Önemli Notlar</h3>
+                <ul className="list-disc list-inside text-surface-300 text-xs space-y-2">
+                  <li>Davet maili gelmediyse <strong>Spam (Gereksiz) klasörünü</strong> mutlaka kontrol edin.</li>
+                  <li>Şifre değiştirmeye çalışmayın, paylaşımlı hesap kilitlenebilir.</li>
+                </ul>
+              </div>
+
+              <div className="bg-surface-800/50 border border-white/5 rounded-2xl p-5 flex flex-col justify-center text-center">
+                <h3 className="text-white font-semibold mb-2 text-sm">🛠 Yardım Gerekirse</h3>
+                <p className="text-surface-400 text-xs mb-3">Kurulumda sorun yaşarsanız bize WhatsApp üzerinden anında ulaşabilirsiniz.</p>
+                <a href="https://wa.me/905344630465" target="_blank" rel="noreferrer" className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-[#25D366]/20 text-[#25D366] hover:bg-[#25D366]/30 border border-[#25D366]/20 rounded-xl transition-colors text-sm font-medium">
+                  WhatsApp Destek Hattı
+                </a>
+              </div>
             </div>
           </div>
         </div>
