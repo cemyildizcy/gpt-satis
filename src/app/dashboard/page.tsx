@@ -110,20 +110,29 @@ export default function DashboardPage() {
     return () => clearInterval(interval)
   }, [user, fetchUser])
 
+  const [uploadError, setUploadError] = useState('')
+
   const handleUpload = async (file: File) => {
     setUploading(true)
     setUploadSuccess(false)
+    setUploadError('')
     try {
       const formData = new FormData()
       formData.append('receipt', file)
       const res = await fetch('/api/user/payment', { method: 'POST', body: formData })
+      const data = await res.json()
       if (res.ok) {
         setUploadSuccess(true)
         fetchPayments()
         setTimeout(() => setUploadSuccess(false), 5000)
+      } else {
+        setUploadError(data.error || 'Dekont yüklenirken hata oluştu')
+        setTimeout(() => setUploadError(''), 5000)
       }
     } catch (err) {
       console.error('Upload error:', err)
+      setUploadError('Bağlantı hatası. Lütfen tekrar deneyin.')
+      setTimeout(() => setUploadError(''), 5000)
     } finally {
       setUploading(false)
     }
@@ -139,6 +148,8 @@ export default function DashboardPage() {
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) handleUpload(file)
+    // Reset input so same file can be selected again
+    e.target.value = ''
   }
 
   const handleCopyIban = () => {
@@ -418,6 +429,15 @@ export default function DashboardPage() {
                   <div className="text-5xl">✅</div>
                   <p className="text-emerald-400 font-medium">Dekont yüklendi!</p>
                   <p className="text-surface-400 text-sm">Admin onayı bekleniyor</p>
+                </div>
+              ) : uploadError ? (
+                <div className="space-y-3">
+                  <div className="text-5xl">❌</div>
+                  <p className="text-red-400 font-medium">{uploadError}</p>
+                  <label className="inline-block px-5 py-2.5 rounded-xl bg-red-500/20 text-red-400 text-sm cursor-pointer hover:bg-red-500/30 transition-colors">
+                    Tekrar Dene
+                    <input type="file" className="hidden" onChange={handleFileSelect} accept="image/*,.pdf,.doc,.docx" />
+                  </label>
                 </div>
               ) : (
                 <div className="space-y-3">
